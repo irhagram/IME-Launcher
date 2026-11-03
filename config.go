@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -36,7 +37,7 @@ type Config struct {
 func defaultConfig() Config {
 	return Config{
 		Discords: []DiscordLink{
-			{Name: "IME Roleplay", URL: "https://discord.com/invite/J7jJ5w4F"},
+			{Name: "IME Roleplay", URL: "https://discord.gg/imeroleplay"},
 			{Name: "Motion IME Community", URL: "https://discord.gg/motionime"},
 		},
 		CacheURL:      "https://cdn.ferrenza.com/?lang=id",
@@ -63,6 +64,12 @@ func newConfigStore(path string) *configStore {
 			d := defaultConfig()
 			if len(c.Discords) == 0 {
 				c.Discords = d.Discords
+			}
+			// the old temporary invite expired; move saved configs to the permanent one
+			for i := range c.Discords {
+				if strings.Contains(c.Discords[i].URL, "J7jJ5w4F") {
+					c.Discords[i].URL = d.Discords[0].URL
+				}
 			}
 			if c.CacheURL == "" {
 				c.CacheURL = d.CacheURL
