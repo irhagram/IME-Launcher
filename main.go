@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"embed"
@@ -17,7 +17,7 @@ func main() {
 
 	err := wails.Run(&options.App{
 		Title:            "IME Launcher",
-		Width:            1040,
+		Width:            1140,
 		Height:           705,
 		DisableResize:    true,
 		Frameless:        true,

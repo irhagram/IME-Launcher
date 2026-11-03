@@ -1,4 +1,4 @@
-:root{
+﻿:root{
   /* palette from ime_ui (theme/ime.ts) */
   --bg:#0c0d0e; --panel:#161718; --panel2:#1f2022; --line:rgba(173,161,148,.24);
   --maroon:#561918; --ruby:#971c1e; --red:#971c1e; --red2:#c33235;
@@ -132,3 +132,16 @@ input:focus{border-color:var(--red)}
 .ov-actions .btn[hidden]{display:none}
 .tone-force{--tone:var(--red2)}.tone-maintenance{--tone:var(--amber)}.tone-disabled{--tone:var(--stone)}
 .tone-update{--tone:var(--good)}.tone-offline{--tone:var(--amber)}.tone-checking{--tone:var(--stone)}
+
+/* --- header spacing fix (local) --- */
+.titlebar{height:56px;gap:14px;padding:0 12px 0 16px;min-width:0}
+.brand{flex-shrink:0;white-space:nowrap}
+.brand .ver{display:inline-flex;align-items:center;height:18px;padding:0 7px;margin-left:2px;border-radius:99px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:10px;line-height:1;white-space:nowrap}
+.tabs{flex-shrink:0;margin-left:4px}
+.win{gap:10px;min-width:0}
+.win .pill{padding:4px 10px;white-space:nowrap;flex-shrink:0}
+.players{gap:6px}
+.fvpath{min-width:0;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+@media (max-width:1100px){.fvpath{max-width:140px}.titlebar{gap:10px}}
+@media (max-width:960px){.fvpath{max-width:110px}}
+.players,.players span{white-space:nowrap}.players{flex-shrink:0}#playersText{font-variant-numeric:tabular-nums}
