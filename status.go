@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -153,7 +154,13 @@ func fetchRemote(ctx context.Context, rawURL string) (remoteDoc, error) {
 	if resp.StatusCode != http.StatusOK {
 		return doc, fmt.Errorf("HTTP %d", resp.StatusCode)
 	}
-	if err := json.NewDecoder(io.LimitReader(resp.Body, 64<<10)).Decode(&doc); err != nil {
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, 64<<10))
+	if err != nil {
+		return doc, err
+	}
+	// Notepad and some editors save a UTF-8 BOM, which encoding/json rejects.
+	raw = bytes.TrimPrefix(raw, []byte{0xEF, 0xBB, 0xBF})
+	if err := json.Unmarshal(raw, &doc); err != nil {
 		return doc, err
 	}
 	if doc.Launcher == nil {

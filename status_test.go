@@ -123,3 +123,13 @@ func TestLockedBackend(t *testing.T) {
 		t.Error("force status must lock again")
 	}
 }
+
+func TestFetchRemoteBOM(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(append([]byte{0xEF, 0xBB, 0xBF}, `{"launcher":{"enabled":true,"latest_version":"1.0.0"}}`...))
+	}))
+	defer srv.Close()
+	if _, err := fetchRemote(context.Background(), srv.URL); err != nil {
+		t.Errorf("a UTF-8 BOM must be tolerated: %v", err)
+	}
+}

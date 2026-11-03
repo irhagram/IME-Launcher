@@ -112,7 +112,7 @@ Saat dibuka (dan tiap 10 menit), launcher membaca [`launcher.json`](launcher.jso
     "latest_version": "1.0.0",
     "force_update": false,
     "maintenance": false,
-    "download_url": "https://github.com/irhagram/IME-Launcher/releases/latest",
+    "download_url": "https://github.com/irhagram/IME-Launcher/releases/latest/download/IMELauncher.exe",
     "message": ""
   }
 }
@@ -125,7 +125,7 @@ Saat dibuka (dan tiap 10 menit), launcher membaca [`launcher.json`](launcher.jso
 | `minimum_version` | Versi di bawah ini langsung terkunci dan wajib update |
 | `latest_version` | Versi terbaru. Versi di bawahnya melihat pemberitahuan update yang bisa ditutup |
 | `force_update` | `true` membuat semua versi di bawah `latest_version` wajib update, sama seperti di bawah `minimum_version` |
-| `download_url` | Tujuan tombol **Download Update**. Hanya link `https://github.com/...` yang diterima |
+| `download_url` | Tujuan tombol **Download Update**. Link langsung ke exe (`.../releases/latest/download/IMELauncher.exe`) membuat pemain langsung mengunduh tanpa membuka halaman GitHub. Hanya link `https://github.com/...` yang diterima |
 | `message` | Pesan yang tampil di layar. Kosong berarti memakai teks bawaan |
 
 Urutan prioritas: `enabled` lalu `maintenance` lalu update wajib lalu update biasa.
