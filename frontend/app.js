@@ -30,6 +30,7 @@ let dlState = 'idle';
 
 // ---- tabs & window ----
 document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
+  if (blocked) return;
   document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x === t));
   document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === 'view-' + t.dataset.tab));
   go().SetHeight(t.dataset.tab === 'cache' ? 630 : 705);
@@ -167,7 +168,7 @@ $('btnFivemTop').onclick = async () => {
 function renderDiscords(list) {
   const box = $('dcs');
   box.innerHTML = '';
-  list.forEach((d) => {
+  (list || []).forEach((d) => {
     const b = document.createElement('button');
     b.className = 'dc';
     const sub = d.ok ? `<small>${nf(d.members)} member</small><small>${nf(d.online)} online</small>` : '';
@@ -308,10 +309,70 @@ $('btnExtract').onclick = async () => {
   $('btnExtract').disabled = dlState !== 'done';
 };
 
+// ---- launcher status (version gate) ----
+const ICONS = {
+  update: '<path d="M12 19V5M5 12l7-7 7 7"/>',
+  force: '<path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/>',
+  maintenance: '<path d="M9 5v14M15 5v14"/>',
+  disabled: '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>',
+  offline: '<path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/>',
+  checking: '<path d="M12 3a9 9 0 1 0 9 9"/>',
+};
+const STATE_LABEL = {
+  update: 'Update tersedia', force: 'Update wajib', maintenance: 'Maintenance',
+  disabled: 'Dinonaktifkan', offline: 'Tidak terhubung', checking: 'Memeriksa',
+};
+
+let started = false;
+let blocked = true;
+let dismissedLatest = '';
+
+function renderStatus(st) {
+  blocked = !!st.blocked;
+  $('ver').textContent = 'v' + st.current;
+  const ov = $('ov');
+  const hide = st.state === 'ok' || (st.state === 'update' && dismissedLatest === st.latest);
+  if (hide) {
+    ov.hidden = true;
+    if (!started) startApp();
+    return;
+  }
+  ov.hidden = false;
+  ov.classList.toggle('soft', st.state === 'update');
+  ov.querySelector('.ov-card').className = 'ov-card tone-' + st.state;
+  $('ovIcon').className = 'ov-icon' + (st.state === 'checking' ? ' spin' : '');
+  $('ovIcon').innerHTML = `<svg viewBox="0 0 24 24">${ICONS[st.state] || ICONS.force}</svg>`;
+  $('ovState').textContent = STATE_LABEL[st.state] || '';
+  $('ovTitle').textContent = st.title;
+  $('ovMsg').textContent = st.state === 'checking' ? 'Mohon tunggu sebentar...' : st.message;
+  const ver = [`Versi kamu <b>v${st.current}</b>`];
+  if (st.latest) ver.push(`Terbaru <b>v${st.latest}</b>`);
+  if (st.state === 'force' && st.minimum) ver.push(`Minimum <b>v${st.minimum}</b>`);
+  $('ovVer').innerHTML = ver.join(' · ');
+  $('ovVer').hidden = st.state === 'checking';
+
+  const show = (id, on) => ($(id).hidden = !on);
+  const canDl = !!st.downloadUrl && (st.state === 'update' || st.state === 'force');
+  show('ovDl', canDl);
+  show('ovLater', st.state === 'update');
+  show('ovRetry', ['offline', 'maintenance', 'disabled', 'force'].includes(st.state));
+  show('ovQuit', st.blocked && st.state !== 'checking');
+  $('ovDl').onclick = () => go().OpenURL(st.downloadUrl);
+  $('ovLater').onclick = () => { dismissedLatest = st.latest; renderStatus({ ...st, state: 'ok', blocked: false }); };
+}
+
+$('ovRetry').onclick = async () => {
+  const b = $('ovRetry');
+  b.disabled = true; b.textContent = 'Memeriksa...';
+  renderStatus(await go().CheckStatus());
+  b.disabled = false; b.textContent = 'Cek Lagi';
+};
+$('ovQuit').onclick = () => go().Quit();
+on('launcher:status', renderStatus);
+
 // ---- boot ----
-window.addEventListener('DOMContentLoaded', async () => {
-  cfg = await go().GetConfig();
-  buildGates();
+function startApp() {
+  started = true;
   runAll();
   refreshPlayers();
   refreshMetrics();
@@ -320,4 +381,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   setInterval(refreshDiscords, 300000);
   setInterval(refreshPlayers, 15000);
   setInterval(refreshMetrics, 120000);
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  cfg = await go().GetConfig();
+  buildGates();
+  renderStatus(await go().GetStatus());
 });

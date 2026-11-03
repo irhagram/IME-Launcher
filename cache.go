@@ -124,7 +124,12 @@ func (a *App) fetchCacheInfo() CacheInfo {
 }
 
 // GetCacheInfo returns the latest cache version, size, and local paths.
-func (a *App) GetCacheInfo() CacheInfo { return a.fetchCacheInfo() }
+func (a *App) GetCacheInfo() CacheInfo {
+	if !a.allowed() {
+		return CacheInfo{Error: a.lockedMsg()}
+	}
+	return a.fetchCacheInfo()
+}
 
 // GetDownloadState lets the UI re-sync after a reload.
 func (a *App) GetDownloadState() DLProgress {
@@ -135,6 +140,9 @@ func (a *App) GetDownloadState() DLProgress {
 
 // PickDownloadDir lets the user choose where the 30 GB file is stored.
 func (a *App) PickDownloadDir() (string, error) {
+	if !a.allowed() {
+		return "", errors.New(a.lockedMsg())
+	}
 	dir, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
 		Title:            "Pilih folder penyimpanan cache",
 		DefaultDirectory: existingDir(a.defaultDownloadDir()),
@@ -175,6 +183,9 @@ func freeSpace(dir string) (int64, error) {
 
 // StartDownload downloads (or resumes) ImeCache-1.bin.
 func (a *App) StartDownload() error {
+	if !a.allowed() {
+		return errors.New(a.lockedMsg())
+	}
 	d := a.dl
 	d.mu.Lock()
 	if d.cancel != nil {
@@ -370,6 +381,9 @@ type ExtractResult struct {
 // launches it; the official installer auto-detects the .bin and the FiveM folder
 // and unpacks into FiveM.app\data\server-cache-priv.
 func (a *App) ExtractCache() ExtractResult {
+	if !a.allowed() {
+		return ExtractResult{Msg: a.lockedMsg()}
+	}
 	dir := a.defaultDownloadDir()
 	bin := filepath.Join(dir, binName)
 	st, err := os.Stat(bin)

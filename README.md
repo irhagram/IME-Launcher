@@ -100,6 +100,42 @@ Cache mempercepat loading dan mencegah texture loss. Ukurannya sekitar 30 GB.
 
 Kalau versi cache baru dirilis, launcher mengunduh versi baru dari awal dan tidak memakai file lama.
 
+## Update dan status launcher
+
+Saat dibuka (dan tiap 10 menit), launcher membaca [`launcher.json`](launcher.json) dari branch `main` repo ini. Dari situ admin bisa mengatur apakah launcher boleh dipakai.
+
+```json
+{
+  "launcher": {
+    "enabled": true,
+    "minimum_version": "1.0.0",
+    "latest_version": "1.0.0",
+    "force_update": false,
+    "maintenance": false,
+    "download_url": "https://github.com/irhagram/IME-Launcher/releases/latest",
+    "message": ""
+  }
+}
+```
+
+| Kolom | Fungsi |
+|---|---|
+| `enabled` | `false` mengunci launcher untuk semua versi ("Launcher Dinonaktifkan") |
+| `maintenance` | `true` mengunci launcher dengan layar maintenance |
+| `minimum_version` | Versi di bawah ini langsung terkunci dan wajib update |
+| `latest_version` | Versi terbaru. Versi di bawahnya melihat pemberitahuan update yang bisa ditutup |
+| `force_update` | `true` membuat semua versi di bawah `latest_version` wajib update, sama seperti di bawah `minimum_version` |
+| `download_url` | Tujuan tombol **Download Update**. Hanya link `https://github.com/...` yang diterima |
+| `message` | Pesan yang tampil di layar. Kosong berarti memakai teks bawaan |
+
+Urutan prioritas: `enabled` lalu `maintenance` lalu update wajib lalu update biasa.
+
+Selama terkunci, semua fitur (connect, cek jaringan, cache, dan lainnya) berhenti, termasuk download yang sedang berjalan. Versi launcher yang sedang dipakai ada di dalam exe (`Version` di `status.go`) dan tampil di header. Kalau JSON tidak bisa dibaca (offline atau file tidak ada), launcher tetap terkunci sampai pemeriksaan berhasil.
+
+Contoh urgent update: ubah `latest_version` ke versi baru dan `force_update` ke `true`, lalu commit ke `main`. Perubahan terbaca dalam hitungan menit.
+
+Naik versi: ubah `Version` di `status.go` dan versi di `winres/winres.json`, lalu build ulang.
+
 ## Pengaturan lanjutan
 
 Konfigurasi tersimpan di `%AppData%\IMELauncher\config.json`. Isinya bisa diubah dengan Notepad saat launcher ditutup:

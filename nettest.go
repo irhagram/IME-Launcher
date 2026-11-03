@@ -116,6 +116,9 @@ func (s *stats) loss() float64 {
 // TestGate measures this PC -> gate: ping from TCP connect time (all probes counted)
 // and packet loss from UDP queries, one round per second, reporting live progress.
 func (a *App) TestGate(gateID string) NetResult {
+	if !a.allowed() {
+		return NetResult{Gate: gateID, Error: a.lockedMsg()}
+	}
 	g, ok := a.gate(gateID)
 	if !ok {
 		return NetResult{Gate: gateID, Error: "gate tidak dikenal"}

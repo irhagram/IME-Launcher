@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -23,16 +25,32 @@ type App struct {
 	ctx context.Context
 	cfg *configStore
 	dl  *downloader
+
+	statusMu sync.Mutex
+	status   LauncherStatus
 }
 
 func NewApp() *App {
 	a := &App{}
 	a.cfg = newConfigStore(filepath.Join(a.dataDir(), "config.json"))
 	a.dl = newDownloader(a)
+	a.status = LauncherStatus{State: "checking", Blocked: true, Current: Version, Title: "Memeriksa pembaruan"}
 	return a
 }
 
-func (a *App) startup(ctx context.Context) { a.ctx = ctx }
+// lockedMsg explains why a feature call was refused while the launcher is locked.
+func (a *App) lockedMsg() string {
+	st := a.GetStatus()
+	if st.Title == "" {
+		return "Launcher terkunci"
+	}
+	return "Launcher terkunci: " + st.Title
+}
+
+func (a *App) startup(ctx context.Context) {
+	a.ctx = ctx
+	go a.statusLoop(ctx)
+}
 
 // dataDir returns %AppData%\IMELauncher (plus optional sub elements).
 func (a *App) dataDir(sub ...string) string {
@@ -88,6 +106,9 @@ type PlayerInfo struct {
 
 // GetPlayers reads the FiveM server's public dynamic.json (served on the game port).
 func (a *App) GetPlayers() PlayerInfo {
+	if !a.allowed() {
+		return PlayerInfo{Error: a.lockedMsg()}
+	}
 	var lastErr string
 	for _, g := range a.cfg.get().Gates {
 		info, err := fetchDynamic(g)
@@ -161,6 +182,9 @@ func (a *App) LocateFiveM() string {
 
 // PickFiveM lets the user browse to the FiveM Application Data folder (FiveM.app).
 func (a *App) PickFiveM() (string, error) {
+	if !a.allowed() {
+		return "", errors.New(a.lockedMsg())
+	}
 	start := ""
 	if la := os.Getenv("LOCALAPPDATA"); la != "" {
 		start = filepath.Join(la, "FiveM")
@@ -191,6 +215,9 @@ type ConnectResult struct {
 // never spawn FiveM.exe ourselves: Explorer starts it with the link when it is
 // closed and delivers the link to the running instance otherwise.
 func (a *App) Connect(gateID string) ConnectResult {
+	if !a.allowed() {
+		return ConnectResult{Msg: a.lockedMsg()}
+	}
 	g, ok := a.gate(gateID)
 	if !ok {
 		return ConnectResult{Msg: "gate tidak dikenal"}

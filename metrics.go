@@ -44,6 +44,9 @@ var (
 // GetMetrics scrapes the public 5metrics server page (it has no JSON API; the data
 // is embedded in the page's Next.js payload) and caches the result for a couple of minutes.
 func (a *App) GetMetrics() Metrics {
+	if !a.allowed() {
+		return Metrics{Error: a.lockedMsg()}
+	}
 	metricsMu.Lock()
 	defer metricsMu.Unlock()
 	if metricsCache.OK && time.Since(metricsAt) < metricsTTL {

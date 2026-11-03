@@ -29,6 +29,9 @@ var (
 // GetDiscords returns the configured Discord servers with member counts from the
 // public invite endpoint (cached for a few minutes).
 func (a *App) GetDiscords() []DiscordInfo {
+	if !a.allowed() {
+		return nil
+	}
 	links := a.cfg.get().Discords
 	out := make([]DiscordInfo, len(links))
 	var wg sync.WaitGroup
