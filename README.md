@@ -6,6 +6,10 @@
 
 Windows 10 atau 11 (64-bit). Tidak perlu instalasi: setelah terunduh, langsung jalankan. Catatan perubahan ada di halaman [Releases](https://github.com/irhagram/IME-Launcher/releases/latest).
 
+## Video tutorial
+
+Cara memakai launcher dari awal sampai connect: [Tonton video tutorial (MP4)](https://github.com/irhagram/IME-Launcher/blob/main/docs/ime-launcher-tutorial.mp4). Klik link, lalu video langsung diputar di halaman GitHub.
+
 ---
 
 Launcher Windows untuk server **iME Roleplay**. Dipakai untuk memilih gerbang (Main / Inter), cek jaringan, connect ke server, dan mengunduh cache.
