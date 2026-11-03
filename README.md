@@ -10,9 +10,9 @@ Windows 10 atau 11 (64-bit). Tidak perlu instalasi: setelah terunduh, langsung j
 
 Cara memakai launcher dari awal sampai connect.
 
-<video src="https://github.com/irhagram/IME-Launcher/raw/main/docs/ime-launcher-tutorial-small.mp4" controls width="100%"></video>
+![Video tutorial IME Launcher](docs/tutorial.gif)
 
-Kalau video di atas tidak muncul, [tonton di sini](https://github.com/irhagram/IME-Launcher/blob/main/docs/ime-launcher-tutorial-small.mp4).
+Versi dengan suara dan kontrol putar: [tonton video lengkap](https://github.com/irhagram/IME-Launcher/blob/main/docs/ime-launcher-tutorial-small.mp4).
 
 ---
 
