@@ -368,6 +368,10 @@ $('ovRetry').onclick = async () => {
   b.disabled = false; b.textContent = 'Cek Lagi';
 };
 $('ovQuit').onclick = () => go().Quit();
+
+const REPO_URL = 'https://github.com/irhagram/IME-Launcher';
+$('ver').addEventListener('click', () => go().OpenURL(REPO_URL));
+$('ver').addEventListener('keydown', (e) => { if (e.key === 'Enter') go().OpenURL(REPO_URL); });
 on('launcher:status', renderStatus);
 
 // ---- boot ----
