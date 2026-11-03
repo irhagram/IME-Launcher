@@ -1,5 +1,13 @@
 # IME Launcher
 
+## Download di sini
+
+### [Download IMELauncher.exe (versi terbaru)](https://github.com/irhagram/IME-Launcher/releases/latest/download/IMELauncher.exe)
+
+Windows 10 atau 11 (64-bit). Tidak perlu instalasi: setelah terunduh, langsung jalankan. Catatan perubahan ada di halaman [Releases](https://github.com/irhagram/IME-Launcher/releases/latest).
+
+---
+
 Launcher Windows untuk server **iME Roleplay**. Dipakai untuk memilih gerbang (Main / Inter), cek jaringan, connect ke server, dan mengunduh cache.
 
 ![Halaman Gate](docs/gate.png)
@@ -13,7 +21,7 @@ Launcher Windows untuk server **iME Roleplay**. Dipakai untuk memilih gerbang (M
 
 ## Memulai
 
-1. Unduh `IMELauncher.exe` dari halaman [Releases](../../releases).
+1. [Unduh `IMELauncher.exe`](https://github.com/irhagram/IME-Launcher/releases/latest/download/IMELauncher.exe) (versi terbaru).
 2. Jalankan. Tidak perlu instalasi, file boleh ditaruh di folder mana saja.
    Kalau muncul peringatan Windows SmartScreen: klik **More info**, lalu **Run anyway**.
 3. Atur lokasi FiveM (lihat bagian berikut).

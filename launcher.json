@@ -2,7 +2,7 @@
   "launcher": {
     "enabled": true,
     "minimum_version": "1.0.0",
-    "latest_version": "1.0.0",
+    "latest_version": "1.0.1",
     "force_update": false,
     "maintenance": false,
     "download_url": "https://github.com/irhagram/IME-Launcher/releases/latest/download/IMELauncher.exe",
