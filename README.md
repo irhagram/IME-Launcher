@@ -129,6 +129,7 @@ Saat dibuka (dan tiap 10 menit), launcher membaca [`launcher.json`](launcher.jso
     "force_update": false,
     "maintenance": false,
     "download_url": "https://github.com/irhagram/IME-Launcher/releases/latest/download/IMELauncher.exe",
+    "sha256": "",
     "message": ""
   }
 }
@@ -139,16 +140,19 @@ Saat dibuka (dan tiap 10 menit), launcher membaca [`launcher.json`](launcher.jso
 | `enabled` | `false` mengunci launcher untuk semua versi ("Launcher Dinonaktifkan") |
 | `maintenance` | `true` mengunci launcher dengan layar maintenance |
 | `minimum_version` | Versi di bawah ini langsung terkunci dan wajib update |
-| `latest_version` | Versi terbaru. Versi di bawahnya melihat pemberitahuan update yang bisa ditutup |
+| `latest_version` | Versi terbaru. Versi di bawahnya tidak dikunci dan tidak ada popup: hanya muncul tag **NEW** merah di samping nomor versi. Klik tag itu untuk membuka popup berisi detail update (diambil dari catatan release di GitHub), lalu pilih **Update Sekarang** atau **Tutup** |
 | `force_update` | `true` membuat semua versi di bawah `latest_version` wajib update, sama seperti di bawah `minimum_version` |
-| `download_url` | Tujuan tombol **Download Update**. Link langsung ke exe (`.../releases/latest/download/IMELauncher.exe`) membuat pemain langsung mengunduh tanpa membuka halaman GitHub. Hanya link `https://github.com/...` yang diterima |
+| `download_url` | Sumber update. Link langsung ke exe (`.../releases/latest/download/IMELauncher.exe`) bisa diunduh langsung oleh launcher. Hanya link `https://github.com/...` yang diterima |
+| `sha256` | Hash SHA-256 `IMELauncher.exe` yang dirilis (64 karakter hex). Kalau terisi, launcher mengunduh dan memasang update sendiri; kalau kosong, tombolnya membuka `download_url` di browser |
 | `message` | Pesan yang tampil di layar. Kosong berarti memakai teks bawaan |
+
+**Update otomatis.** Popup layar penuh hanya dipakai untuk update wajib (dan maintenance atau dinonaktifkan). Update biasa hanya memunculkan tag **NEW** di samping versi; kalau diklik, popup detail update muncul dan bisa ditutup. Untuk update wajib, popup muncul sendiri, launcher terkunci, dan satu-satunya tombol adalah **Update Sekarang**. Detail update selalu diambil dari release dengan tag yang sama dengan `latest_version` (misalnya `1.0.3`), jadi isi catatan release di GitHub itulah yang dibaca pemain. Syaratnya `sha256` terisi. Launcher mengunduh exe baru di latar belakang, mencocokkan hash-nya dengan `sha256`, mengganti dirinya, lalu terbuka ulang sendiri. Kalau hash tidak cocok, unduhan gagal, atau folder launcher tidak bisa ditulis, exe lama tidak diubah. Di update wajib muncul tombol **Download Manual**, di update biasa popup tetap terbuka dengan tombol yang sama. Fitur ini baru ada mulai v1.0.3; versi di bawahnya tetap harus mengunduh manual.
 
 Urutan prioritas: `enabled` lalu `maintenance` lalu update wajib lalu update biasa.
 
 Selama terkunci, semua fitur (connect, cek jaringan, cache, dan lainnya) berhenti, termasuk download yang sedang berjalan. Versi launcher yang sedang dipakai ada di dalam exe (`Version` di `status.go`) dan tampil di header. Kalau JSON tidak bisa dibaca (offline atau file tidak ada), launcher tetap terkunci sampai pemeriksaan berhasil.
 
-Contoh urgent update: ubah `latest_version` ke versi baru dan `force_update` ke `true`, lalu commit ke `main`. Perubahan terbaca dalam hitungan menit.
+Contoh urgent update: ubah `latest_version` ke versi baru, isi `sha256` dengan hash exe barunya, dan ubah `force_update` ke `true`, lalu commit ke `main`. Perubahan terbaca dalam hitungan menit. Isi `sha256` baru setelah release terbit dan exe di release sama persis dengan yang di-hash.
 
 Naik versi: ubah `Version` di `status.go` dan versi di `winres/winres.json`, lalu build ulang.
 

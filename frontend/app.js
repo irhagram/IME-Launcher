@@ -325,20 +325,93 @@ const STATE_LABEL = {
 
 let started = false;
 let blocked = true;
-let dismissedLatest = '';
+let updating = false;
+let popupOpen = false; // an optional update's popup is only shown after clicking NEW
+let curStatus = null;
+const notesCache = {};
+
+// An optional update ("update") never forces anything: it only lights up the NEW tag
+// next to the version, and clicking it opens the details popup. Locks (force update,
+// maintenance, ...) open the same popup on their own and cannot be closed.
+function renderNewTag(st) {
+  const tag = $('newTag');
+  tag.hidden = st.state !== 'update';
+  if (tag.hidden) return;
+  tag.title = `Versi v${st.latest} tersedia. Klik untuk melihat detail.`;
+}
+
+// Release notes (GitHub release body), rendered with DOM nodes only, never as HTML.
+function inline(parent, text) {
+  text.split(/(\*\*[^*]+\*\*|`[^`]+`)/).forEach((part) => {
+    if (!part) return;
+    let el;
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) { el = document.createElement('b'); el.textContent = part.slice(2, -2); }
+    else if (part.startsWith('`') && part.endsWith('`') && part.length > 2) { el = document.createElement('code'); el.textContent = part.slice(1, -1); }
+    else el = document.createTextNode(part);
+    parent.appendChild(el);
+  });
+}
+
+const NOTES_STOP = /^(?:#{1,6}\s*)?(?:\*\*)?\s*(?:fitur|file|sha-?256)\b/i;
+
+function renderNotes(box, n) {
+  box.replaceChildren();
+  const head = document.createElement('div');
+  head.className = 'nt-head';
+  head.textContent = (n.title || 'Catatan rilis') + (n.published ? ' · ' + new Date(n.published).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '');
+  box.appendChild(head);
+  let list = null;
+  let seenFirst = false;
+  let stop = false;
+  n.body.split('\n').forEach((raw) => {
+    const line = raw.trim();
+    // The popup only needs what is new; the feature list, file list and checksum stay on the release page.
+    if (stop || NOTES_STOP.test(line)) { stop = true; return; }
+    if (!line) { list = null; return; }
+    const li = line.match(/^[-*]\s+(.*)$/);
+    if (li) {
+      if (!list) { list = document.createElement('ul'); box.appendChild(list); }
+      const item = document.createElement('li');
+      inline(item, li[1]);
+      list.appendChild(item);
+      return;
+    }
+    list = null;
+    const h = line.match(/^#{1,6}\s+(.*)$/);
+    if (h && !seenFirst && h[1].trim().toLowerCase() === (n.title || '').trim().toLowerCase()) { seenFirst = true; return; } // the popup header already shows the title
+    seenFirst = true;
+    const el = document.createElement(h ? 'h4' : 'p');
+    inline(el, h ? h[1] : line);
+    box.appendChild(el);
+  });
+}
+
+async function loadNotes(st) {
+  const box = $('ovNotes');
+  if (!st.latest || (st.state !== 'update' && st.state !== 'force')) { box.hidden = true; return; }
+  if (notesCache[st.latest]) { renderNotes(box, notesCache[st.latest]); box.hidden = false; return; }
+  box.hidden = true;
+  try {
+    const n = await go().GetReleaseNotes(st.latest);
+    if (!n || !n.ok || !(n.body || '').trim()) return;
+    notesCache[st.latest] = n;
+    if (curStatus && curStatus.latest === st.latest && !$('ov').hidden) { renderNotes(box, n); box.hidden = false; }
+  } catch (e) { /* notes are optional */ }
+}
 
 function renderStatus(st) {
+  curStatus = st;
   blocked = !!st.blocked;
   $('ver').textContent = 'v' + st.current;
+  if (updating) return;
   const ov = $('ov');
-  const hide = st.state === 'ok' || (st.state === 'update' && dismissedLatest === st.latest);
-  if (hide) {
+  renderNewTag(st);
+  if (st.state === 'ok' || (st.state === 'update' && !popupOpen)) {
     ov.hidden = true;
     if (!started) startApp();
     return;
   }
   ov.hidden = false;
-  ov.classList.toggle('soft', st.state === 'update');
   ov.querySelector('.ov-card').className = 'ov-card tone-' + st.state;
   $('ovIcon').className = 'ov-icon' + (st.state === 'checking' ? ' spin' : '');
   $('ovIcon').innerHTML = `<svg viewBox="0 0 24 24">${ICONS[st.state] || ICONS.force}</svg>`;
@@ -351,15 +424,62 @@ function renderStatus(st) {
   $('ovVer').innerHTML = ver.join(' · ');
   $('ovVer').hidden = st.state === 'checking';
 
+  // A forced update can only be answered by updating. An optional one can be closed.
   const show = (id, on) => ($(id).hidden = !on);
-  const canDl = !!st.downloadUrl && (st.state === 'update' || st.state === 'force');
-  show('ovDl', canDl);
-  show('ovLater', st.state === 'update');
-  show('ovRetry', ['offline', 'maintenance', 'disabled', 'force'].includes(st.state));
-  show('ovQuit', st.blocked && st.state !== 'checking');
-  $('ovDl').onclick = () => go().OpenURL(st.downloadUrl);
-  $('ovLater').onclick = () => { dismissedLatest = st.latest; renderStatus({ ...st, state: 'ok', blocked: false }); };
+  show('ovDl', !!st.downloadUrl && (st.state === 'force' || st.state === 'update'));
+  show('ovClose', st.state === 'update');
+  show('ovRetry', ['offline', 'maintenance', 'disabled'].includes(st.state));
+  show('ovQuit', st.blocked && st.state !== 'checking' && st.state !== 'force');
+  show('ovManual', false);
+  $('ovProg').hidden = true;
+  $('ovDl').textContent = st.selfUpdate ? 'Update Sekarang' : 'Download Update';
+  $('ovDl').onclick = st.selfUpdate ? startUpdate : () => go().OpenURL(st.downloadUrl);
+  $('ovManual').onclick = () => go().OpenURL(st.downloadUrl);
+  loadNotes(st);
 }
+
+async function startUpdate() {
+  try {
+    await go().StartUpdate();
+  } catch (e) {
+    return updateFailed(String(e));
+  }
+  updating = true;
+  ['ovDl', 'ovManual', 'ovClose', 'ovRetry', 'ovQuit'].forEach((id) => ($(id).hidden = true));
+  $('ovProg').hidden = false;
+  $('ovFill').style.width = '0';
+  $('ovProgTxt').textContent = 'Menghubungkan...';
+  $('ovMsg').textContent = 'Mengunduh update. Launcher akan terbuka ulang sendiri setelah selesai.';
+}
+
+function updateFailed(msg) {
+  updating = false;
+  renderStatus(curStatus);
+  $('ovMsg').textContent = msg;
+  $('ovManual').hidden = false;
+}
+
+on('update:progress', (p) => {
+  if (p.state === 'error') return updateFailed(p.error);
+  if (p.state === 'downloading') {
+    const pct = p.total > 0 ? Math.min(100, (p.done / p.total) * 100) : 0;
+    $('ovFill').style.width = pct + '%';
+    $('ovProgTxt').textContent = `${fmtBytes(p.done)} / ${fmtBytes(p.total)} · ${fmtBytes(p.speed)}/s`;
+  } else {
+    $('ovFill').style.width = '100%';
+    $('ovProgTxt').textContent = { verifying: 'Memverifikasi file...', applying: 'Memasang update...', restarting: 'Membuka ulang launcher...' }[p.state] || '';
+  }
+});
+
+$('newTag').onclick = () => {
+  if (!curStatus || curStatus.state !== 'update') return;
+  popupOpen = true;
+  renderStatus(curStatus);
+};
+$('ovClose').onclick = () => {
+  popupOpen = false;
+  renderStatus(curStatus);
+};
 
 $('ovRetry').onclick = async () => {
   const b = $('ovRetry');

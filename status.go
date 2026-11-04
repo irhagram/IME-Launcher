@@ -15,12 +15,13 @@ import (
 )
 
 // Version is this build's version. Override at build time with
-// -ldflags "-X main.Version=1.0.2" (keep winres/winres.json in step).
-var Version = "1.0.2"
+// -ldflags "-X main.Version=1.0.3" (keep winres/winres.json in step).
+var Version = "1.0.3"
 
-// statusURL is deliberately a constant and not part of config.json, so it cannot be
-// repointed by editing a local file.
-const statusURL = "https://raw.githubusercontent.com/irhagram/IME-Launcher/main/launcher.json"
+// statusURL is deliberately not part of config.json, so it cannot be repointed by
+// editing a local file. It is a var only so the simulation build can override it
+// with -ldflags -X.
+var statusURL = "https://raw.githubusercontent.com/irhagram/IME-Launcher/main/launcher.json"
 
 const (
 	statusRefresh = 10 * time.Minute
@@ -37,6 +38,8 @@ type LauncherStatus struct {
 	Latest      string `json:"latest"`
 	Minimum     string `json:"minimum"`
 	DownloadURL string `json:"downloadUrl"`
+	SelfUpdate  bool   `json:"selfUpdate"` // the launcher can update itself (download_url + sha256 are usable)
+	SHA256      string `json:"-"`
 }
 
 type remoteDoc struct {
@@ -47,6 +50,7 @@ type remoteDoc struct {
 		ForceUpdate    bool   `json:"force_update"`
 		Maintenance    bool   `json:"maintenance"`
 		DownloadURL    string `json:"download_url"`
+		SHA256         string `json:"sha256"`
 		Message        string `json:"message"`
 	} `json:"launcher"`
 }
@@ -90,10 +94,7 @@ func versionParts(v string) []int {
 // JSON cannot send players to an arbitrary site.
 func safeDownloadURL(raw string) string {
 	u, err := url.Parse(strings.TrimSpace(raw))
-	if err != nil || u.Scheme != "https" {
-		return ""
-	}
-	if h := strings.ToLower(u.Hostname()); h != "github.com" && h != "www.github.com" {
+	if err != nil || !trustedURL(u, false) {
 		return ""
 	}
 	return u.String()
@@ -130,6 +131,9 @@ func decide(cur string, doc remoteDoc) LauncherStatus {
 	case belowLatest:
 		st.State = "update"
 		def("Update Tersedia", "Versi baru launcher sudah tersedia.")
+	}
+	if sum := strings.ToLower(strings.TrimSpace(l.SHA256)); validSHA256(sum) && st.DownloadURL != "" && (st.State == "update" || st.State == "force") {
+		st.SelfUpdate, st.SHA256 = true, sum
 	}
 	return st
 }
@@ -205,6 +209,9 @@ func (a *App) setStatus(st LauncherStatus) {
 		a.PauseDownload() // a locked launcher must not keep downloading
 	}
 	a.emit("launcher:status", st)
+	if onStatus != nil {
+		onStatus(a, st)
+	}
 }
 
 // allowed reports whether features may run. Every feature method checks this in the

@@ -28,6 +28,9 @@ type App struct {
 
 	statusMu sync.Mutex
 	status   LauncherStatus
+
+	updMu    sync.Mutex
+	updating bool
 }
 
 func NewApp() *App {
@@ -49,6 +52,7 @@ func (a *App) lockedMsg() string {
 
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	go cleanupUpdate()
 	go a.statusLoop(ctx)
 }
 

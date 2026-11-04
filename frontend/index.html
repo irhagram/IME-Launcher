@@ -12,7 +12,7 @@
 <body>
 <div class="app">
   <header class="titlebar">
-    <div class="brand"><img src="logo.webp" alt=""><span>IME <b>LAUNCHER</b></span><em class="ver" id="ver" role="link" tabindex="0" title="Buka repo di GitHub"></em></div>
+    <div class="brand"><img src="logo.webp" alt=""><span>IME <b>LAUNCHER</b></span><em class="ver" id="ver" role="link" tabindex="0" title="Buka repo di GitHub"></em><button class="newtag" id="newTag" hidden>NEW</button></div>
     <nav class="tabs">
       <button class="tab active" data-tab="gate">Gate</button>
       <button class="tab" data-tab="cache">Cache</button>
@@ -91,10 +91,16 @@
       <h2 id="ovTitle"></h2>
       <p id="ovMsg"></p>
       <div class="ov-ver" id="ovVer"></div>
+      <div class="ov-notes" id="ovNotes" hidden></div>
+      <div class="ov-prog" id="ovProg" hidden>
+        <div class="bar"><div class="fill" id="ovFill"></div></div>
+        <div class="ov-progtxt" id="ovProgTxt"></div>
+      </div>
       <div class="ov-actions">
         <button class="btn primary" id="ovDl" hidden>Download Update</button>
+        <button class="btn ghost" id="ovManual" hidden>Download Manual</button>
+        <button class="btn ghost" id="ovClose" hidden>Tutup</button>
         <button class="btn" id="ovRetry" hidden>Cek Lagi</button>
-        <button class="btn ghost" id="ovLater" hidden>Nanti</button>
         <button class="btn ghost" id="ovQuit" hidden>Keluar</button>
       </div>
     </div>

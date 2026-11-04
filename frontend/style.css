@@ -116,7 +116,6 @@ input:focus{border-color:var(--red)}
 .app{position:relative}
 .ov{position:absolute;left:0;right:0;top:50px;bottom:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(12,13,14,.97);padding:24px}
 .ov[hidden]{display:none}
-.ov.soft{background:rgba(12,13,14,.86)}
 .ov-card{width:440px;max-width:100%;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:28px 28px 22px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
 .ov-icon{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--tone,var(--stone));color:var(--tone,var(--stone))}
 .ov-icon svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
@@ -130,6 +129,21 @@ input:focus{border-color:var(--red)}
 .ov-ver b{color:var(--text);font-weight:600}
 .ov-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:center}
 .ov-actions .btn[hidden]{display:none}
+.newtag{display:inline-flex;align-items:center;height:18px;padding:0 8px;margin-left:-4px;border-radius:99px;border:0;background:var(--red);color:#fff;font-family:inherit;font-weight:700;font-size:9.5px;line-height:1;letter-spacing:.06em;cursor:pointer;--wails-draggable:none;white-space:nowrap}
+.newtag[hidden]{display:none}
+.newtag:hover{background:var(--red2)}
+.ov-notes{width:100%;max-width:380px;max-height:170px;overflow-y:auto;text-align:left;background:#0c0d0e;border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:6px;font-size:12px;line-height:1.55;color:var(--muted);user-select:text}
+.ov-notes[hidden]{display:none}
+.ov-notes .nt-head{font-weight:600;color:var(--text);margin-bottom:4px}
+.ov-notes h4{font-size:12px;font-weight:600;color:var(--text);margin:8px 0 2px}
+.ov-notes p{margin:4px 0;max-width:none;font-size:12px;white-space:normal}
+.ov-notes ul{margin:2px 0 4px;padding-left:18px}
+.ov-notes li{margin:2px 0}
+.ov-notes b{color:var(--text);font-weight:600}
+.ov-notes code{font-family:Consolas,monospace;font-size:11px;background:rgba(255,255,255,.07);border-radius:4px;padding:0 4px;word-break:break-all}
+.ov-prog{width:100%;max-width:360px;margin-top:8px}
+.ov-prog[hidden]{display:none}
+.ov-progtxt{margin-top:8px;font-size:11.5px;color:var(--muted)}
 .tone-force{--tone:var(--red2)}.tone-maintenance{--tone:var(--amber)}.tone-disabled{--tone:var(--stone)}
 .tone-update{--tone:var(--good)}.tone-offline{--tone:var(--amber)}.tone-checking{--tone:var(--stone)}
 
