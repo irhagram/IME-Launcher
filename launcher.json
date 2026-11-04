@@ -1,12 +1,12 @@
 {
   "launcher": {
     "enabled": true,
-    "minimum_version": "1.0.1",
-    "latest_version": "1.0.3",
+    "minimum_version": "1.0.4",
+    "latest_version": "1.0.4",
     "force_update": false,
     "maintenance": false,
     "download_url": "https://github.com/irhagram/IME-Launcher/releases/latest/download/IMELauncher.exe",
-    "sha256": "61561fd83309c098c781bd28ae341cb322e2c977f539e442852d25708de5a497",
-    "message": ""
+    "sha256": "921c26a43ef81676f0bbf92230afbbee12ec802e4321d229f1c5745dadb65b30",
+    "message": "Pengaturan FiveM berubah (build 3889). Update launcher diperlukan supaya bisa connect ke server."
   }
 }
