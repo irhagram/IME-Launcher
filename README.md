@@ -1,3 +1,5 @@
+![IME Roleplay](frontend/banner.gif)
+
 # IME Launcher
 
 ## Download di sini
