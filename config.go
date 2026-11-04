@@ -79,6 +79,8 @@ func newConfigStore(path string) *configStore {
 			}
 			if len(c.FiveMSettings) == 0 {
 				c.FiveMSettings = d.FiveMSettings
+			} else {
+				c.FiveMSettings = migrateFiveMSettings(c.FiveMSettings, d.FiveMSettings)
 			}
 			if len(c.Gates) == 0 {
 				c.Gates = d.Gates

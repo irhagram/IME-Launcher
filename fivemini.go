@@ -19,9 +19,35 @@ type Setting struct {
 func defaultFiveMSettings() []Setting {
 	return []Setting{
 		{"PoolSizesIncrease", `{"AnimStore":20480,"CMoveObject":75,"FragmentStore":14000,"OcclusionInteriorInfo":20,"OcclusionPathNode":5000,"OcclusionPortalEntity":750,"OcclusionPortalInfo":750,"PortalInst":225,"ScaleformStore":200,"StaticBounds":5000,"TxdStore":26000}`},
-		{"DefaultBuild", "3258"},
+		{"DefaultBuild", "3889"},
 		{"SavedBuildNumber", "2612"},
 	}
+}
+
+// retiredFiveMValues are values earlier launcher versions wrote into config.json. The
+// config keeps a copy of the settings, so a saved old default would otherwise win over
+// the new one forever; values the player edited by hand are left alone.
+var retiredFiveMValues = map[string][]string{
+	"DefaultBuild": {"3258"},
+}
+
+// migrateFiveMSettings replaces retired default values with the current ones.
+func migrateFiveMSettings(saved, current []Setting) []Setting {
+	out := make([]Setting, len(saved))
+	copy(out, saved)
+	for i, s := range out {
+		for _, old := range retiredFiveMValues[s.Key] {
+			if s.Value != old {
+				continue
+			}
+			for _, c := range current {
+				if c.Key == s.Key {
+					out[i].Value = c.Value
+				}
+			}
+		}
+	}
+	return out
 }
 
 // fivemRunning reports whether FiveM.exe is in the process list (no child process spawned).

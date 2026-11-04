@@ -3,7 +3,7 @@
   "RT_MANIFEST": {
     "#1": {
       "0409": {
-        "identity": { "name": "IME.Launcher", "version": "1.0.3.0" },
+        "identity": { "name": "IME.Launcher", "version": "1.0.4.0" },
         "description": "IME Launcher",
         "minimum-os": "win10",
         "execution-level": "as invoker",
@@ -25,17 +25,17 @@
   "RT_VERSION": {
     "#1": {
       "0000": {
-        "fixed": { "file_version": "1.0.3.0", "product_version": "1.0.3.0" },
+        "fixed": { "file_version": "1.0.4.0", "product_version": "1.0.4.0" },
         "info": {
           "0409": {
             "CompanyName": "IME Roleplay",
             "FileDescription": "IME Launcher",
-            "FileVersion": "1.0.3.0",
+            "FileVersion": "1.0.4.0",
             "InternalName": "IMELauncher",
             "LegalCopyright": "IME Roleplay",
             "OriginalFilename": "IMELauncher.exe",
             "ProductName": "IME Launcher",
-            "ProductVersion": "1.0.3.0"
+            "ProductVersion": "1.0.4.0"
           }
         }
       }
