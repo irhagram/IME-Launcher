@@ -2,11 +2,11 @@
   "launcher": {
     "enabled": true,
     "minimum_version": "1.0.1",
-    "latest_version": "1.0.2",
+    "latest_version": "1.0.3",
     "force_update": false,
     "maintenance": false,
     "download_url": "https://github.com/irhagram/IME-Launcher/releases/latest/download/IMELauncher.exe",
-    "sha256": "",
+    "sha256": "61561fd83309c098c781bd28ae341cb322e2c977f539e442852d25708de5a497",
     "message": ""
   }
 }
