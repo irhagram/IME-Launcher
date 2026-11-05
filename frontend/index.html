@@ -21,6 +21,7 @@
       <span class="fvpath" id="fvPath"></span>
       <button class="pill fivemloc" id="btnFivemTop" title="Pilih folder FiveM Application Data">Lokasi FiveM</button>
       <div class="pill players" id="players" title="Pemain online"><i class="dot"></i><span id="playersText">...</span><span class="sep"></span><span class="peak" id="peakText" title="Peak pemain 24 jam">Peak -</span><span class="sep"></span><span class="rank" id="rankText" title="Peringkat server global (5metrics)">Rank -</span></div>
+      <button class="gear" id="btnSettings" title="Pengaturan"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       <div class="lights"><button class="light min" id="btnMin" title="Minimize"><i>&#8722;</i></button><button class="light close" id="btnClose" title="Tutup"><i>&#10005;</i></button></div>
     </div>
   </header>
@@ -79,6 +80,26 @@
           <button class="btn accent" id="btnExtract" disabled>Extract ke FiveM</button>
           <button class="btn ghost" id="btnOpenDir">Buka Folder</button>
         </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-settings">
+      <div class="card cachecard">
+        <div class="card-head"><h2>Pengaturan</h2></div>
+        <div class="rows">
+          <div class="row stack">
+            <label for="nickInput">Nickname</label>
+            <div class="inline">
+              <input id="nickInput" maxlength="30" spellcheck="false" autocomplete="off" placeholder="Nama pemain">
+              <button class="btn primary small" id="btnNickSave">Simpan</button>
+              <button class="btn ghost small" id="btnNickReset">Reset</button>
+            </div>
+          </div>
+          <div class="row"><label>Sumber nama</label><span class="path" id="nickPath">-</span></div>
+        </div>
+        <div class="hint">Nama yang tampil dibaca dari Settings FiveM (Player Name) kalau sudah diisi, kalau belum dari <code>cl_nickname</code> di <code>fivem.cfg</code>. Simpan menulis ke keduanya (cadangan dibuat otomatis). Tutup FiveM dulu sebelum menyimpan.</div>
+        <div class="msg" id="nickMsg"></div>
       </div>
     </section>
 

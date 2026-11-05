@@ -104,6 +104,10 @@ input:focus{border-color:var(--red)}
 .dc span{display:flex;flex-direction:column;gap:1px;min-width:0}
 .fvpath{max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;color:var(--good)}
 .fvpath.unset{color:var(--amber)}
+.gear{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:0;border-radius:8px;background:none;color:var(--muted);cursor:pointer;transition:.15s;--wails-draggable:none}
+.gear svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.gear:hover{color:#fff;background:rgba(255,255,255,.08)}
+.gear.active{color:#fff;background:var(--red)}
 .lights{display:flex;gap:8px;margin-left:6px;--wails-draggable:none}
 .light{position:relative;width:13px;height:13px;border-radius:50%;border:0;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .light.close{background:#ff5f57}.light.min{background:#febc2e}

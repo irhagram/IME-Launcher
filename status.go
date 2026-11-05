@@ -15,8 +15,8 @@ import (
 )
 
 // Version is this build's version. Override at build time with
-// -ldflags "-X main.Version=1.0.4" (keep winres/winres.json in step).
-var Version = "1.0.4"
+// -ldflags "-X main.Version=1.0.5" (keep winres/winres.json in step).
+var Version = "1.0.5"
 
 // statusURL is deliberately not part of config.json, so it cannot be repointed by
 // editing a local file. It is a var only so the simulation build can override it

@@ -32,10 +32,48 @@ let dlState = 'idle';
 document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
   if (blocked) return;
   document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x === t));
+  $('btnSettings').classList.remove('active');
   document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === 'view-' + t.dataset.tab));
   go().SetHeight(t.dataset.tab === 'cache' ? 630 : 705);
   if (t.dataset.tab === 'cache') loadCache();
 }));
+
+// ---- settings (gear) ----
+const nickMsg = (text, kind) => { $('nickMsg').textContent = text || ''; $('nickMsg').className = 'msg' + (kind ? ' ' + kind : ''); };
+
+async function loadNickname() {
+  try {
+    const r = await go().GetNickname();
+    $('nickInput').value = r.value || '';
+    const own = r.source === 'Settings FiveM';
+    $('nickPath').textContent = own ? 'Settings FiveM' + (r.cfgValue && r.cfgValue !== r.value ? ` · fivem.cfg: ${r.cfgValue}` : '') : (r.source || '-');
+    $('nickPath').title = r.path || '';
+    nickMsg(r.error || (r.running ? 'FiveM sedang terbuka. Tutup FiveM dulu sebelum menyimpan.' : ''), r.error ? 'err' : '');
+  } catch (e) { nickMsg(String(e), 'err'); }
+}
+
+async function saveNickname(value) {
+  $('btnNickSave').disabled = $('btnNickReset').disabled = true;
+  try {
+    const r = await go().SetNickname(value);
+    nickMsg(r.msg, r.ok ? 'ok' : 'err');
+    if (r.ok) $('nickInput').value = value.trim();
+  } catch (e) { nickMsg(String(e), 'err'); }
+  $('btnNickSave').disabled = $('btnNickReset').disabled = false;
+}
+
+$('btnSettings').onclick = () => {
+  if (blocked) return;
+  if ($('btnSettings').classList.contains('active')) { document.querySelector('.tab[data-tab="gate"]').click(); return; }
+  document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
+  document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === 'view-settings'));
+  $('btnSettings').classList.add('active');
+  go().SetHeight(630);
+  loadNickname();
+};
+$('btnNickSave').onclick = () => saveNickname($('nickInput').value);
+$('btnNickReset').onclick = async () => { await saveNickname(''); if ($('nickMsg').classList.contains('ok')) $('nickInput').value = ''; };
+$('nickInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveNickname($('nickInput').value); });
 $('btnMin').onclick = () => go().Minimise();
 $('btnClose').onclick = () => go().Quit();
 $('btnTest').onclick = runAll;
@@ -157,7 +195,7 @@ $('btnFivemTop').onclick = async () => {
       await refreshFivemLoc();
       b.textContent = 'Tersimpan';
       setTimeout(() => (b.textContent = 'Lokasi FiveM'), 1500);
-      if (document.querySelector('.tab.active').dataset.tab === 'cache') loadCache();
+      if ((document.querySelector('.tab.active') || {}).dataset?.tab === 'cache') loadCache();
     }
   } catch (e) {
     $('connectStatus').textContent = String(e);
