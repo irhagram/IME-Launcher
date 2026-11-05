@@ -51,7 +51,10 @@ func migrateFiveMSettings(saved, current []Setting) []Setting {
 }
 
 // fivemRunning reports whether FiveM.exe is in the process list (no child process spawned).
-func fivemRunning() bool {
+// fivemRunning is a var so tests can stub it.
+var fivemRunning = isFivemRunning
+
+func isFivemRunning() bool {
 	snap, err := windows.CreateToolhelp32Snapshot(windows.TH32CS_SNAPPROCESS, 0)
 	if err != nil {
 		return false

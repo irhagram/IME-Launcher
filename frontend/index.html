@@ -86,7 +86,7 @@
     <!-- SETTINGS -->
     <section class="view" id="view-settings">
       <div class="card cachecard">
-        <div class="card-head"><h2>Pengaturan</h2></div>
+        <div class="card-head"><h2>Pengaturan</h2><span class="pill" id="keptPill" hidden></span></div>
         <div class="rows">
           <div class="row stack">
             <label for="nickInput">Nickname</label>
@@ -95,15 +95,20 @@
               <button class="btn primary small" id="btnNickSave">Simpan</button>
               <button class="btn ghost small" id="btnNickReset">Reset</button>
             </div>
+            <div class="inline">
+              <button class="btn accent small" id="btnNickKeep">Keep for IME</button>
+              <button class="btn ghost small" id="btnNickUnkeep" hidden>Remove from Keep</button>
+            </div>
           </div>
         </div>
         <div class="msg" id="nickMsg"></div>
 
         <div class="sect">
-          <div class="card-head"><h2>Keybind</h2><span class="pill" id="bindCount">-</span></div>
+          <div class="card-head"><h2>Global Keybinds</h2><span class="pill" id="bindCount">-</span></div>
+          <input class="bindsearch" id="bindSearch" type="search" placeholder="Cari keybind..." spellcheck="false" autocomplete="off">
           <div class="bindwrap">
             <table class="bindtbl">
-              <thead><tr><th>Input</th><th>Tombol</th><th>Perintah</th><th></th></tr></thead>
+              <thead><tr><th>Input</th><th>Tombol</th><th>Perintah</th><th></th><th></th></tr></thead>
               <tbody id="bindBody"></tbody>
             </table>
             <div class="bindempty" id="bindEmpty" hidden>Belum ada keybind. Klik Tambah.</div>
@@ -114,6 +119,23 @@
             <button class="btn small ghost" id="btnBindReload">Muat Ulang</button>
           </div>
           <div class="msg" id="bindMsg"></div>
+        </div>
+
+        <div class="sect">
+          <div class="card-head"><h2>IME Keybinds</h2><span class="pill" id="imeCount">-</span></div>
+          <input class="bindsearch" id="imeSearch" type="search" placeholder="Cari resource, perintah, atau tombol..." spellcheck="false" autocomplete="off">
+          <div class="bindwrap">
+            <table class="bindtbl ime">
+              <thead><tr><th>Resource</th><th>Perintah</th><th>Input</th><th>Tombol</th></tr></thead>
+              <tbody id="imeBody"></tbody>
+            </table>
+            <div class="bindempty" id="imeEmpty" hidden>Belum ada keybind resource IME di fivem.cfg.</div>
+          </div>
+          <div class="actions">
+            <button class="btn small primary" id="btnImeSave">Simpan Keybind</button>
+            <button class="btn small ghost" id="btnImeReload">Muat Ulang</button>
+          </div>
+          <div class="msg" id="imeMsg"></div>
         </div>
       </div>
     </section>

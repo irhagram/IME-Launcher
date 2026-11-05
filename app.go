@@ -240,12 +240,18 @@ func (a *App) Connect(gateID string) ConnectResult {
 		return ConnectResult{Msg: "Konfigurasi IME baru diterapkan. Tutup FiveM sepenuhnya, lalu klik Connect lagi."}
 	}
 
+	note := a.applyKeptNickname()
+
 	cmd := exec.Command("explorer.exe", "fivem://connect/"+g.Host)
 	if err := cmd.Start(); err != nil {
 		return ConnectResult{Msg: "gagal membuka FiveM: " + err.Error()}
 	}
 	_ = cmd.Process.Release()
-	return ConnectResult{OK: true, Msg: "Membuka FiveM & connecting ke " + g.Name + "..."}
+	msg := "Membuka FiveM & connecting ke " + g.Name + "..."
+	if note != "" {
+		msg += " " + note
+	}
+	return ConnectResult{OK: true, Msg: msg}
 }
 
 func (a *App) OpenFolder(p string) {

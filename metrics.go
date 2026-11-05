@@ -63,23 +63,39 @@ func (a *App) GetMetrics() Metrics {
 	return m
 }
 
-func fetchMetrics(id string) (Metrics, error) {
+// serverDoc is the part of the 5metrics server page the launcher uses.
+type serverDoc struct {
+	Players      int `json:"players"`
+	AvgPlayers   int `json:"avgPlayers"`
+	MaxPlayers   int `json:"maxPlayers"`
+	MinPlayers   int `json:"minPlayers"`
+	Rank         int `json:"rank"`
+	PlayerCounts []struct {
+		N int    `json:"playerCount"`
+		T string `json:"timestmap"` // sic: spelled like this by 5metrics
+	} `json:"playerCounts"`
+	Resources []string `json:"resources"`
+}
+
+// fetchServerDoc reads the server object out of the page's Next.js payload.
+func fetchServerDoc(id string) (serverDoc, error) {
+	var wrap serverDoc
 	if id == "" {
-		return Metrics{}, errors.New("metricsId kosong")
+		return wrap, errors.New("metricsId kosong")
 	}
 	req, _ := http.NewRequest("GET", "https://5metrics.dev/server/"+id, nil)
 	req.Header.Set("User-Agent", userAgent)
 	resp, err := (&http.Client{Timeout: 15 * time.Second}).Do(req)
 	if err != nil {
-		return Metrics{}, err
+		return wrap, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return Metrics{}, fmt.Errorf("5metrics HTTP %d", resp.StatusCode)
+		return wrap, fmt.Errorf("5metrics HTTP %d", resp.StatusCode)
 	}
 	html, err := io.ReadAll(io.LimitReader(resp.Body, 8<<20))
 	if err != nil {
-		return Metrics{}, err
+		return wrap, err
 	}
 
 	var payload strings.Builder
@@ -92,22 +108,19 @@ func fetchMetrics(id string) (Metrics, error) {
 	text := payload.String()
 	at := strings.Index(text, `"server":{`)
 	if at < 0 {
-		return Metrics{}, errors.New("format halaman 5metrics berubah")
-	}
-	var wrap struct {
-		Players      int `json:"players"`
-		AvgPlayers   int `json:"avgPlayers"`
-		MaxPlayers   int `json:"maxPlayers"`
-		MinPlayers   int `json:"minPlayers"`
-		Rank         int `json:"rank"`
-		PlayerCounts []struct {
-			N int    `json:"playerCount"`
-			T string `json:"timestmap"` // sic: spelled like this by 5metrics
-		} `json:"playerCounts"`
+		return wrap, errors.New("format halaman 5metrics berubah")
 	}
 	dec := json.NewDecoder(strings.NewReader(text[at+len(`"server":`):]))
 	if err := dec.Decode(&wrap); err != nil {
-		return Metrics{}, fmt.Errorf("gagal membaca data 5metrics: %w", err)
+		return wrap, fmt.Errorf("gagal membaca data 5metrics: %w", err)
+	}
+	return wrap, nil
+}
+
+func fetchMetrics(id string) (Metrics, error) {
+	wrap, err := fetchServerDoc(id)
+	if err != nil {
+		return Metrics{}, err
 	}
 
 	out := Metrics{OK: true, Players: wrap.Players, Avg: wrap.AvgPlayers, Peak: wrap.MaxPlayers, Min: wrap.MinPlayers, Rank: wrap.Rank}

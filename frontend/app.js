@@ -41,10 +41,18 @@ document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () 
 // ---- settings (gear) ----
 const nickMsg = (text, kind) => { $('nickMsg').textContent = text || ''; $('nickMsg').className = 'msg' + (kind ? ' ' + kind : ''); };
 
+// the name kept for IME: shown next to the title, applied by the launcher on Connect
+function renderKept(kept) {
+  $('keptPill').hidden = !kept;
+  $('keptPill').textContent = kept ? 'Keep for IME: ' + kept : '';
+  $('btnNickUnkeep').hidden = !kept;
+}
+
 async function loadNickname() {
   try {
     const r = await go().GetNickname();
     $('nickInput').value = r.value || '';
+    renderKept(r.kept);
     nickMsg(r.error || (r.running ? 'FiveM sedang terbuka. Tutup FiveM dulu sebelum menyimpan.' : ''), r.error ? 'err' : '');
   } catch (e) { nickMsg(String(e), 'err'); }
 }
@@ -83,6 +91,32 @@ function fivemKeyName(code) {
   return FIVEM_KEYS[code] || '';
 }
 
+// listen mode: with the KEYBOARD input, pressing a key in `key` fills in FiveM's name for it
+function keyListen(sel, key, msg, onSet) {
+  const listen = () => { key.placeholder = sel.value === 'KEYBOARD' ? 'Tekan tombol...' : 'NAMA_TOMBOL'; };
+  listen(); sel.addEventListener('change', listen);
+  key.addEventListener('keydown', (e) => {
+    if (sel.value !== 'KEYBOARD') return; // other inputs: type the name by hand
+    if (e.ctrlKey && e.key.toLowerCase() === 'v' || e.key === 'Unidentified') return;
+    e.preventDefault(); e.stopPropagation();
+    const name = fivemKeyName(e.code);
+    if (!name) { msg(`Tombol "${e.code || e.key}" tidak punya nama kontrol FiveM.`, 'err'); return; }
+    key.value = name; msg('', ''); onSet();
+  });
+  key.addEventListener('beforeinput', (e) => { if (sel.value === 'KEYBOARD') e.preventDefault(); });
+}
+
+// search box: hide the rows that do not contain the text; the empty box shows "no match"
+function filterRows(bodyId, emptyId, q, emptyText) {
+  q = (q || '').trim().toLowerCase();
+  const rows = [...$(bodyId).children];
+  let shown = 0;
+  rows.forEach((tr) => { tr.hidden = !!q && !tr._text().includes(q); if (!tr.hidden) shown++; });
+  const empty = $(emptyId);
+  if (rows.length && !shown) { empty.textContent = 'Tidak ada yang cocok.'; empty.hidden = false; }
+  else { empty.textContent = emptyText; empty.hidden = rows.length > 0; }
+}
+
 function bindRow(b) {
   const tr = document.createElement('tr');
   const mappers = MAPPERS.includes(b.mapper) ? MAPPERS : [...MAPPERS, b.mapper];
@@ -93,33 +127,32 @@ function bindRow(b) {
   key.value = b.key; key.maxLength = 32; key.placeholder = 'I'; key.spellcheck = false;
   const cmd = document.createElement('input');
   cmd.value = b.command; cmd.maxLength = 200; cmd.placeholder = 'e tablet'; cmd.spellcheck = false;
+  let off = !!b.disabled;
+  const tog = document.createElement('button');
+  tog.className = 'tog'; tog.type = 'button';
+  const paint = () => { tr.classList.toggle('off', off); tog.textContent = off ? 'OFF' : 'ON'; tog.title = off ? 'Nonaktif: tidak ada di fivem.cfg. Klik untuk mengaktifkan' : 'Aktif: ada di fivem.cfg. Klik untuk menonaktifkan'; };
+  tog.onclick = () => { off = !off; paint(); tr.classList.add('dirty'); bindChanged(); };
   const del = document.createElement('button');
   del.className = 'del'; del.type = 'button'; del.title = 'Hapus'; del.textContent = '✕';
   del.onclick = () => { tr.remove(); bindChanged(); };
   [sel, key, cmd].forEach((el) => el.addEventListener('input', () => { tr.classList.add('dirty'); bindChanged(); }));
   [sel, cmd].forEach((el) => el.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveKeybinds(); }));
-  // listen mode: with the KEYBOARD input, pressing a key fills in FiveM's name for it
-  const listen = () => { key.placeholder = sel.value === 'KEYBOARD' ? 'Tekan tombol...' : 'NAMA_TOMBOL'; };
-  listen(); sel.addEventListener('change', listen);
-  key.addEventListener('keydown', (e) => {
-    if (sel.value !== 'KEYBOARD') return; // other inputs: type the name by hand
-    if (e.ctrlKey && e.key.toLowerCase() === 'v' || e.key === 'Unidentified') return;
-    e.preventDefault(); e.stopPropagation();
-    const name = fivemKeyName(e.code);
-    if (!name) { bindMsg(`Tombol "${e.code || e.key}" tidak punya nama kontrol FiveM.`, 'err'); return; }
-    key.value = name; bindMsg('', ''); tr.classList.add('dirty'); bindChanged();
-  });
-  key.addEventListener('beforeinput', (e) => { if (sel.value === 'KEYBOARD') e.preventDefault(); });
-  [sel, key, cmd, del].forEach((el) => { const td = document.createElement('td'); td.appendChild(el); tr.appendChild(td); });
-  tr._get = () => ({ mapper: sel.value, key: key.value, command: cmd.value });
+  keyListen(sel, key, bindMsg, () => { tr.classList.add('dirty'); bindChanged(); });
+  [sel, key, cmd, tog, del].forEach((el) => { const td = document.createElement('td'); td.appendChild(el); tr.appendChild(td); });
+  tr._get = () => ({ mapper: sel.value, key: key.value, command: cmd.value, disabled: off });
+  tr._text = () => [sel.value, key.value, cmd.value, off ? 'nonaktif off' : 'aktif on'].join(' ').toLowerCase();
+  paint();
   return tr;
 }
 
 function bindChanged() {
   const n = $('bindBody').children.length;
-  $('bindCount').textContent = n + ' bind';
-  $('bindEmpty').hidden = n > 0;
+  const offN = [...$('bindBody').children].filter((tr) => tr.classList.contains('off')).length;
+  $('bindCount').textContent = offN ? `${n - offN} aktif · ${offN} nonaktif` : n + ' bind';
+  filterRows('bindBody', 'bindEmpty', $('bindSearch').value, BIND_EMPTY);
 }
+const BIND_EMPTY = 'Belum ada keybind. Klik Tambah.';
+$('bindSearch').addEventListener('input', bindChanged);
 
 function bindItems() { return [...$('bindBody').children].map((tr) => tr._get()); }
 
@@ -148,6 +181,7 @@ async function saveKeybinds() {
 async function loadKeybinds0(msg) { await loadKeybinds(); bindMsg(msg, 'ok'); }
 
 $('btnBindAdd').onclick = () => {
+  $('bindSearch').value = ''; // a new row must be visible
   const tr = bindRow({ mapper: 'KEYBOARD', key: '', command: '' });
   tr.classList.add('dirty');
   $('bindBody').appendChild(tr);
@@ -158,6 +192,61 @@ $('btnBindAdd').onclick = () => {
 $('btnBindSave').onclick = saveKeybinds;
 $('btnBindReload').onclick = loadKeybinds;
 
+// ---- IME keybinds (rbind lines of the server's resources): only the control can change ----
+const imeMsg = (text, kind) => { $('imeMsg').textContent = text || ''; $('imeMsg').className = 'msg' + (kind ? ' ' + kind : ''); };
+
+function imeRow(b) {
+  const tr = document.createElement('tr');
+  const ro = (text) => { const s = document.createElement('div'); s.className = 'ro'; s.textContent = text; s.title = text; return s; };
+  const mappers = MAPPERS.includes(b.mapper) ? MAPPERS : [...MAPPERS, b.mapper];
+  const sel = document.createElement('select');
+  mappers.forEach((m) => { const o = document.createElement('option'); o.value = o.textContent = m; sel.appendChild(o); });
+  sel.value = b.mapper;
+  const key = document.createElement('input');
+  key.value = b.key; key.maxLength = 32; key.spellcheck = false;
+  const first = { mapper: b.mapper, key: b.key };
+  const dirty = () => { tr.classList.toggle('dirty', sel.value !== first.mapper || key.value.trim().toUpperCase() !== first.key); imeChanged(); };
+  sel.addEventListener('change', dirty); key.addEventListener('input', dirty);
+  keyListen(sel, key, imeMsg, dirty);
+  [ro(b.resource), ro(b.command), sel, key].forEach((el) => { const td = document.createElement('td'); td.appendChild(el); tr.appendChild(td); });
+  tr._get = () => ({ resource: b.resource, command: b.command, mapper: sel.value, key: key.value });
+  tr._text = () => [b.resource, b.command, sel.value, key.value].join(' ').toLowerCase();
+  return tr;
+}
+
+function imeChanged() {
+  const rows = [...$('imeBody').children];
+  const d = rows.filter((tr) => tr.classList.contains('dirty')).length;
+  $('imeCount').textContent = d ? `${rows.length} bind · ${d} diubah` : `${rows.length} bind`;
+  filterRows('imeBody', 'imeEmpty', $('imeSearch').value, IME_EMPTY);
+}
+const IME_EMPTY = 'Belum ada keybind resource IME di fivem.cfg.';
+$('imeSearch').addEventListener('input', imeChanged);
+
+async function loadIME() {
+  $('imeBody').replaceChildren();
+  $('imeCount').textContent = '...';
+  try {
+    const r = await go().GetIMEKeybinds();
+    $('imeBody').replaceChildren(...(r.items || []).map(imeRow));
+    imeChanged();
+    imeMsg(r.error || (r.running ? 'FiveM sedang terbuka. Tutup FiveM dulu sebelum menyimpan.' : ''), r.error ? 'err' : '');
+    if (r.error) { $('imeCount').textContent = '-'; $('imeEmpty').hidden = true; }
+  } catch (e) { imeMsg(String(e), 'err'); }
+}
+
+async function saveIME() {
+  $('btnImeSave').disabled = true;
+  try {
+    const r = await go().SaveIMEKeybinds([...$('imeBody').children].map((tr) => tr._get()));
+    if (r.ok) { await loadIME(); }
+    imeMsg(r.msg, r.ok ? 'ok' : 'err');
+  } catch (e) { imeMsg(String(e), 'err'); }
+  $('btnImeSave').disabled = false;
+}
+$('btnImeSave').onclick = saveIME;
+$('btnImeReload').onclick = loadIME;
+
 $('btnSettings').onclick = () => {
   if (blocked) return;
   if ($('btnSettings').classList.contains('active')) { document.querySelector('.tab[data-tab="gate"]').click(); return; }
@@ -167,6 +256,25 @@ $('btnSettings').onclick = () => {
   go().SetHeight(705);
   loadNickname();
   loadKeybinds();
+  loadIME();
+};
+$('btnNickKeep').onclick = async () => {
+  $('btnNickKeep').disabled = true;
+  try {
+    const r = await go().KeepNickname($('nickInput').value);
+    nickMsg(r.msg, r.ok ? 'ok' : 'err');
+    if (r.ok) { $('nickInput').value = $('nickInput').value.trim(); renderKept($('nickInput').value); }
+  } catch (e) { nickMsg(String(e), 'err'); }
+  $('btnNickKeep').disabled = false;
+};
+$('btnNickUnkeep').onclick = async () => {
+  $('btnNickUnkeep').disabled = true;
+  try {
+    const r = await go().RemoveKeptNickname();
+    nickMsg(r.msg, r.ok ? 'ok' : 'err');
+    if (r.ok) renderKept('');
+  } catch (e) { nickMsg(String(e), 'err'); }
+  $('btnNickUnkeep').disabled = false;
 };
 $('btnNickSave').onclick = () => saveNickname($('nickInput').value);
 $('btnNickReset').onclick = async () => { await saveNickname(''); if ($('nickMsg').classList.contains('ok')) $('nickInput').value = ''; };

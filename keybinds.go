@@ -26,17 +26,18 @@ type Keybind struct {
 	Mapper  string `json:"mapper"`
 	Key     string `json:"key"`
 	Command string `json:"command"`
+	// Disabled binds are kept only in the launcher's config, not in fivem.cfg.
+	Disabled bool `json:"disabled"`
 }
 
 // KeybindList is what the settings tab shows.
 type KeybindList struct {
-	OK       bool      `json:"ok"`
-	Items    []Keybind `json:"items"`
-	Path     string    `json:"path"`
-	Exists   bool      `json:"exists"`
-	Running  bool      `json:"running"`
-	Resource int       `json:"resource"` // rbind lines (set by game resources), kept untouched
-	Error    string    `json:"error,omitempty"`
+	OK      bool      `json:"ok"`
+	Items   []Keybind `json:"items"`
+	Path    string    `json:"path"`
+	Exists  bool      `json:"exists"`
+	Running bool      `json:"running"`
+	Error   string    `json:"error,omitempty"`
 }
 
 func splitCfg(text string) (lines []string, eol string) {
@@ -119,11 +120,13 @@ func validKeybinds(in []Keybind) ([]Keybind, error) {
 		if err != nil {
 			return nil, err
 		}
-		id := v.Mapper + " " + v.Key
-		if seen[id] {
-			return nil, fmt.Errorf("tombol %s dipakai dua kali. Satu tombol hanya boleh punya satu perintah", v.Key)
+		if !v.Disabled { // disabled binds are not in fivem.cfg, so they may share a key
+			id := v.Mapper + " " + v.Key
+			if seen[id] {
+				return nil, fmt.Errorf("tombol %s dipakai dua kali. Satu tombol hanya boleh punya satu perintah aktif", v.Key)
+			}
+			seen[id] = true
 		}
-		seen[id] = true
 		out = append(out, v)
 	}
 	return out, nil
@@ -172,8 +175,17 @@ func applyKeybinds(text string, binds []Keybind) string {
 	return strings.Join(res, eol) + eol
 }
 
-// GetKeybinds lists the `bind` lines of fivem.cfg.
+// GetKeybinds lists the `bind` lines of fivem.cfg, then the binds disabled in the launcher.
 func (a *App) GetKeybinds() KeybindList {
+	res := a.cfgKeybinds()
+	for _, d := range a.cfg.get().DisabledBinds {
+		d.Disabled = true
+		res.Items = append(res.Items, d)
+	}
+	return res
+}
+
+func (a *App) cfgKeybinds() KeybindList {
 	path, err := fivemCfgPath()
 	if err != nil {
 		return KeybindList{Items: []Keybind{}, Error: err.Error()}
@@ -187,18 +199,12 @@ func (a *App) GetKeybinds() KeybindList {
 		return res
 	}
 	res.Exists = true
-	text := string(b)
-	res.Items = parseKeybinds(text)
-	lines, _ := splitCfg(text)
-	for _, l := range lines {
-		if strings.HasPrefix(strings.ToLower(strings.TrimSpace(l)), "rbind ") {
-			res.Resource++
-		}
-	}
+	res.Items = parseKeybinds(string(b))
 	return res
 }
 
-// SaveKeybinds replaces the user binds in fivem.cfg with the given list.
+// SaveKeybinds writes the enabled binds to fivem.cfg and keeps the disabled ones in the
+// launcher config, so they can be switched on again later.
 func (a *App) SaveKeybinds(items []Keybind) SettingsResult {
 	if !a.allowed() {
 		return SettingsResult{Msg: a.lockedMsg()}
@@ -210,6 +216,14 @@ func (a *App) SaveKeybinds(items []Keybind) SettingsResult {
 	if fivemRunning() {
 		return SettingsResult{Msg: "FiveM sedang terbuka. Tutup FiveM sepenuhnya dulu, karena FiveM menulis ulang fivem.cfg saat ditutup."}
 	}
+	var on, off []Keybind
+	for _, b := range binds {
+		if b.Disabled {
+			off = append(off, b)
+		} else {
+			on = append(on, b)
+		}
+	}
 	path, err := fivemCfgPath()
 	if err != nil {
 		return SettingsResult{Msg: err.Error()}
@@ -219,15 +233,12 @@ func (a *App) SaveKeybinds(items []Keybind) SettingsResult {
 	if err != nil && !os.IsNotExist(err) {
 		return SettingsResult{Msg: "Gagal membaca fivem.cfg: " + err.Error()}
 	}
-	next := applyKeybinds(string(orig), binds)
-	if exists && next == string(orig) {
-		return SettingsResult{OK: true, Msg: "Tidak ada perubahan."}
+	next := applyKeybinds(string(orig), on)
+	if (exists && next != string(orig)) || (!exists && len(on) > 0) {
+		if err := commitCfg(path, orig, exists, next); err != nil {
+			return SettingsResult{Msg: "Gagal menulis fivem.cfg: " + err.Error()}
+		}
 	}
-	if !exists && len(binds) == 0 {
-		return SettingsResult{OK: true, Msg: "Tidak ada perubahan."}
-	}
-	if err := commitCfg(path, orig, exists, next); err != nil {
-		return SettingsResult{Msg: "Gagal menulis fivem.cfg: " + err.Error()}
-	}
-	return SettingsResult{OK: true, Msg: fmt.Sprintf("Tersimpan: %d keybind di fivem.cfg.", len(binds))}
+	a.cfg.update(func(c *Config) { c.DisabledBinds = off })
+	return SettingsResult{OK: true, Msg: fmt.Sprintf("Tersimpan: %d aktif, %d nonaktif.", len(on), len(off))}
 }

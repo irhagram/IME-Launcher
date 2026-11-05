@@ -24,6 +24,7 @@ type NicknameInfo struct {
 	CfgValue string `json:"cfgValue"`
 	Exists   bool   `json:"exists"`
 	Running  bool   `json:"running"` // FiveM is open: it rewrites fivem.cfg when it closes
+	Kept     string `json:"kept"`    // name kept for IME: applied on every Connect
 	Error    string `json:"error,omitempty"`
 }
 
@@ -151,7 +152,7 @@ func (a *App) GetNickname() NicknameInfo {
 	if err != nil {
 		return NicknameInfo{Error: err.Error()}
 	}
-	info := NicknameInfo{OK: true, Path: path, Source: "fivem.cfg", Running: fivemRunning()}
+	info := NicknameInfo{OK: true, Path: path, Source: "fivem.cfg", Running: fivemRunning(), Kept: a.cfg.get().KeptNick}
 	if b, err := os.ReadFile(path); err == nil {
 		info.Exists = true
 		info.CfgValue, _ = readNickname(string(b))
@@ -178,11 +179,8 @@ func (a *App) SetNickname(name string) SettingsResult {
 	if !a.allowed() {
 		return SettingsResult{Msg: a.lockedMsg()}
 	}
-	path, err := fivemCfgPath()
-	if err != nil {
-		return SettingsResult{Msg: err.Error()}
-	}
 	if strings.TrimSpace(name) != "" {
+		var err error
 		if name, err = validNickname(name); err != nil {
 			return SettingsResult{Msg: err.Error()}
 		}
@@ -192,8 +190,17 @@ func (a *App) SetNickname(name string) SettingsResult {
 	if fivemRunning() {
 		return SettingsResult{Msg: "FiveM sedang terbuka. Tutup FiveM sepenuhnya dulu, karena FiveM menulis ulang fivem.cfg saat ditutup."}
 	}
-	_, err = setNicknameInFile(path, name)
+	return a.writeNickname(name)
+}
+
+// writeNickname writes an already validated name (or "" to remove it) to fivem.cfg and to
+// FiveM's own settings. The caller makes sure FiveM is closed.
+func (a *App) writeNickname(name string) SettingsResult {
+	path, err := fivemCfgPath()
 	if err != nil {
+		return SettingsResult{Msg: err.Error()}
+	}
+	if _, err = setNicknameInFile(path, name); err != nil {
 		return SettingsResult{Msg: "Gagal menulis fivem.cfg: " + err.Error()}
 	}
 	// FiveM's own Player Name wins over cl_nickname, so keep it in step.

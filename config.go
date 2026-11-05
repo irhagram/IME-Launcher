@@ -32,6 +32,10 @@ type Config struct {
 	// FiveMSettings are written to CitizenFX.ini [Game] before connecting.
 	FiveMSettings []Setting `json:"fivemSettings"`
 	Gates         []Gate    `json:"gates"`
+	// DisabledBinds are key binds switched off in the settings tab: kept here, not in fivem.cfg.
+	DisabledBinds []Keybind `json:"disabledBinds"`
+	// KeptNick is the nickname kept for IME: Connect sets it before FiveM starts.
+	KeptNick string `json:"keptNick"`
 }
 
 func defaultConfig() Config {
