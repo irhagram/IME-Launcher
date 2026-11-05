@@ -17,7 +17,7 @@ func main() {
 
 	err := wails.Run(&options.App{
 		Title:            "IME Launcher",
-		Width:            1140,
+		Width:            windowWidth,
 		Height:           705,
 		DisableResize:    true,
 		Frameless:        true,

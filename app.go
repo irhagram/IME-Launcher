@@ -85,8 +85,12 @@ func (a *App) gate(id string) (Gate, bool) {
 func (a *App) Minimise() { runtime.WindowMinimise(a.ctx) }
 func (a *App) Quit()     { runtime.Quit(a.ctx) }
 
+// windowWidth is the launcher's fixed width; the window starts with it (main.go) and
+// SetHeight must keep it, or the first tab switch would shrink the window.
+const windowWidth = 1140
+
 // SetHeight resizes the window to fit the active tab.
-func (a *App) SetHeight(h int) { runtime.WindowSetSize(a.ctx, 1040, h) }
+func (a *App) SetHeight(h int) { runtime.WindowSetSize(a.ctx, windowWidth, h) }
 
 // ---- config ----
 
