@@ -75,6 +75,18 @@ input:focus{border-color:var(--red)}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 .hint{font-size:11.5px;color:var(--muted);line-height:1.5}code{color:var(--amber)}
 .cachecard{overflow:auto}
+.sect{display:flex;flex-direction:column;gap:8px;margin-top:6px;padding-top:12px;border-top:1px solid var(--line)}
+.bindwrap{max-height:190px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:rgba(0,0,0,.28)}
+.bindtbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.bindtbl th{position:sticky;top:0;background:#141516;text-align:left;color:var(--muted);font-weight:600;padding:6px 8px;font-size:11px;z-index:1}
+.bindtbl td{padding:4px 6px;border-top:1px solid var(--line)}
+.bindtbl input,.bindtbl select{width:100%;box-sizing:border-box;background:#0c0d0e;border:1px solid var(--line);border-radius:8px;color:#fff;padding:6px 8px;font-size:12.5px;font-family:inherit;outline:none}
+.bindtbl input:focus,.bindtbl select:focus{border-color:var(--red)}
+.bindtbl td:nth-child(1){width:26%}.bindtbl td:nth-child(2){width:18%}.bindtbl td:nth-child(4){width:34px;text-align:center}
+.bindtbl .del{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;width:26px;height:26px;cursor:pointer;line-height:1}
+.bindtbl .del:hover{color:#fff;border-color:var(--bad)}
+.bindtbl tr.dirty td:first-child{box-shadow:inset 3px 0 0 var(--amber)}
+.bindempty{padding:14px;text-align:center;color:var(--muted);font-size:12px}
 ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
 .toolbar{display:flex;align-items:center;justify-content:flex-end;color:var(--muted);font-size:12.5px}
 

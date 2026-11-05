@@ -96,10 +96,25 @@
               <button class="btn ghost small" id="btnNickReset">Reset</button>
             </div>
           </div>
-          <div class="row"><label>Sumber nama</label><span class="path" id="nickPath">-</span></div>
         </div>
-        <div class="hint">Nama yang tampil dibaca dari Settings FiveM (Player Name) kalau sudah diisi, kalau belum dari <code>cl_nickname</code> di <code>fivem.cfg</code>. Simpan menulis ke keduanya (cadangan dibuat otomatis). Tutup FiveM dulu sebelum menyimpan.</div>
         <div class="msg" id="nickMsg"></div>
+
+        <div class="sect">
+          <div class="card-head"><h2>Keybind</h2><span class="pill" id="bindCount">-</span></div>
+          <div class="bindwrap">
+            <table class="bindtbl">
+              <thead><tr><th>Input</th><th>Tombol</th><th>Perintah</th><th></th></tr></thead>
+              <tbody id="bindBody"></tbody>
+            </table>
+            <div class="bindempty" id="bindEmpty" hidden>Belum ada keybind. Klik Tambah.</div>
+          </div>
+          <div class="actions">
+            <button class="btn small ghost" id="btnBindAdd">+ Tambah</button>
+            <button class="btn small primary" id="btnBindSave">Simpan Keybind</button>
+            <button class="btn small ghost" id="btnBindReload">Muat Ulang</button>
+          </div>
+          <div class="msg" id="bindMsg"></div>
+        </div>
       </div>
     </section>
 

@@ -45,9 +45,6 @@ async function loadNickname() {
   try {
     const r = await go().GetNickname();
     $('nickInput').value = r.value || '';
-    const own = r.source === 'Settings FiveM';
-    $('nickPath').textContent = own ? 'Settings FiveM' + (r.cfgValue && r.cfgValue !== r.value ? ` · fivem.cfg: ${r.cfgValue}` : '') : (r.source || '-');
-    $('nickPath').title = r.path || '';
     nickMsg(r.error || (r.running ? 'FiveM sedang terbuka. Tutup FiveM dulu sebelum menyimpan.' : ''), r.error ? 'err' : '');
   } catch (e) { nickMsg(String(e), 'err'); }
 }
@@ -62,14 +59,114 @@ async function saveNickname(value) {
   $('btnNickSave').disabled = $('btnNickReset').disabled = false;
 }
 
+// ---- keybinds (bind lines of fivem.cfg) ----
+const MAPPERS = ['KEYBOARD', 'MOUSE_BUTTON', 'MOUSE_WHEEL', 'PAD_DIGITALBUTTON', 'PAD_ANALOGBUTTON'];
+const bindMsg = (text, kind) => { $('bindMsg').textContent = text || ''; $('bindMsg').className = 'msg' + (kind ? ' ' + kind : ''); };
+
+// KeyboardEvent.code -> the key name FiveM uses in `bind KEYBOARD <name> ...`
+const FIVEM_KEYS = {
+  Escape: 'ESCAPE', Minus: 'MINUS', Equal: 'EQUALS', Backspace: 'BACK', Tab: 'TAB', BracketLeft: 'LBRACKET', BracketRight: 'RBRACKET',
+  Enter: 'RETURN', ControlLeft: 'LCONTROL', ControlRight: 'RCONTROL', Semicolon: 'SEMICOLON', Quote: 'APOSTROPHE', Backquote: 'GRAVE',
+  ShiftLeft: 'LSHIFT', ShiftRight: 'RSHIFT', Backslash: 'BACKSLASH', Comma: 'COMMA', Period: 'PERIOD', Slash: 'SLASH',
+  AltLeft: 'LMENU', AltRight: 'RMENU', Space: 'SPACE', CapsLock: 'CAPITAL', NumLock: 'NUMLOCK', ScrollLock: 'SCROLL',
+  NumpadMultiply: 'MULTIPLY', NumpadSubtract: 'SUBTRACT', NumpadAdd: 'ADD', NumpadDecimal: 'DECIMAL', NumpadDivide: 'DIVIDE',
+  NumpadEnter: 'NUMPADENTER', NumpadEqual: 'NUMPADEQUALS', NumpadComma: 'NUMPADCOMMA', Pause: 'PAUSE', PrintScreen: 'SYSRQ',
+  Home: 'HOME', ArrowUp: 'UP', PageUp: 'PRIOR', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', End: 'END', ArrowDown: 'DOWN', PageDown: 'NEXT',
+  Insert: 'INSERT', Delete: 'DELETE', MetaLeft: 'LWIN', MetaRight: 'RWIN', ContextMenu: 'APPS',
+};
+function fivemKeyName(code) {
+  let m;
+  if ((m = /^Key([A-Z])$/.exec(code))) return m[1];
+  if ((m = /^Digit([0-9])$/.exec(code))) return m[1];
+  if ((m = /^Numpad([0-9])$/.exec(code))) return 'NUMPAD' + m[1];
+  if (/^F([1-9]|1[0-9]|2[0-4])$/.test(code)) return code;
+  return FIVEM_KEYS[code] || '';
+}
+
+function bindRow(b) {
+  const tr = document.createElement('tr');
+  const mappers = MAPPERS.includes(b.mapper) ? MAPPERS : [...MAPPERS, b.mapper];
+  const sel = document.createElement('select');
+  mappers.forEach((m) => { const o = document.createElement('option'); o.value = o.textContent = m; sel.appendChild(o); });
+  sel.value = b.mapper;
+  const key = document.createElement('input');
+  key.value = b.key; key.maxLength = 32; key.placeholder = 'I'; key.spellcheck = false;
+  const cmd = document.createElement('input');
+  cmd.value = b.command; cmd.maxLength = 200; cmd.placeholder = 'e tablet'; cmd.spellcheck = false;
+  const del = document.createElement('button');
+  del.className = 'del'; del.type = 'button'; del.title = 'Hapus'; del.textContent = '✕';
+  del.onclick = () => { tr.remove(); bindChanged(); };
+  [sel, key, cmd].forEach((el) => el.addEventListener('input', () => { tr.classList.add('dirty'); bindChanged(); }));
+  [sel, cmd].forEach((el) => el.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveKeybinds(); }));
+  // listen mode: with the KEYBOARD input, pressing a key fills in FiveM's name for it
+  const listen = () => { key.placeholder = sel.value === 'KEYBOARD' ? 'Tekan tombol...' : 'NAMA_TOMBOL'; };
+  listen(); sel.addEventListener('change', listen);
+  key.addEventListener('keydown', (e) => {
+    if (sel.value !== 'KEYBOARD') return; // other inputs: type the name by hand
+    if (e.ctrlKey && e.key.toLowerCase() === 'v' || e.key === 'Unidentified') return;
+    e.preventDefault(); e.stopPropagation();
+    const name = fivemKeyName(e.code);
+    if (!name) { bindMsg(`Tombol "${e.code || e.key}" tidak punya nama kontrol FiveM.`, 'err'); return; }
+    key.value = name; bindMsg('', ''); tr.classList.add('dirty'); bindChanged();
+  });
+  key.addEventListener('beforeinput', (e) => { if (sel.value === 'KEYBOARD') e.preventDefault(); });
+  [sel, key, cmd, del].forEach((el) => { const td = document.createElement('td'); td.appendChild(el); tr.appendChild(td); });
+  tr._get = () => ({ mapper: sel.value, key: key.value, command: cmd.value });
+  return tr;
+}
+
+function bindChanged() {
+  const n = $('bindBody').children.length;
+  $('bindCount').textContent = n + ' bind';
+  $('bindEmpty').hidden = n > 0;
+}
+
+function bindItems() { return [...$('bindBody').children].map((tr) => tr._get()); }
+
+async function loadKeybinds() {
+  try {
+    const r = await go().GetKeybinds();
+    $('bindBody').replaceChildren(...(r.items || []).map(bindRow));
+    bindChanged();
+    if (r.error) bindMsg(r.error, 'err');
+    else if (!r.exists) bindMsg('fivem.cfg belum ada. Akan dibuat saat disimpan.', '');
+    else bindMsg(r.running ? 'FiveM sedang terbuka. Tutup FiveM dulu sebelum menyimpan.' : '', '');
+  } catch (e) { bindMsg(String(e), 'err'); }
+}
+
+async function saveKeybinds() {
+  $('btnBindSave').disabled = true;
+  try {
+    const r = await go().SaveKeybinds(bindItems());
+    bindMsg(r.msg, r.ok ? 'ok' : 'err');
+    if (r.ok) await loadKeybinds0(r.msg);
+  } catch (e) { bindMsg(String(e), 'err'); }
+  $('btnBindSave').disabled = false;
+}
+
+// reload the table from disk but keep the success message
+async function loadKeybinds0(msg) { await loadKeybinds(); bindMsg(msg, 'ok'); }
+
+$('btnBindAdd').onclick = () => {
+  const tr = bindRow({ mapper: 'KEYBOARD', key: '', command: '' });
+  tr.classList.add('dirty');
+  $('bindBody').appendChild(tr);
+  bindChanged();
+  tr.querySelector('input').focus();
+  tr.scrollIntoView({ block: 'nearest' });
+};
+$('btnBindSave').onclick = saveKeybinds;
+$('btnBindReload').onclick = loadKeybinds;
+
 $('btnSettings').onclick = () => {
   if (blocked) return;
   if ($('btnSettings').classList.contains('active')) { document.querySelector('.tab[data-tab="gate"]').click(); return; }
   document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
   document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === 'view-settings'));
   $('btnSettings').classList.add('active');
-  go().SetHeight(630);
+  go().SetHeight(705);
   loadNickname();
+  loadKeybinds();
 };
 $('btnNickSave').onclick = () => saveNickname($('nickInput').value);
 $('btnNickReset').onclick = async () => { await saveNickname(''); if ($('nickMsg').classList.contains('ok')) $('nickInput').value = ''; };

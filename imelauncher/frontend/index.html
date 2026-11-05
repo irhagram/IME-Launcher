@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>IME Launcher</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="titlebar">
+    <div class="brand"><img src="logo.webp" alt=""><span>IME <b>LAUNCHER</b></span><em class="ver" id="ver"></em></div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="gate">Gate</button>
+      <button class="tab" data-tab="cache">Cache</button>
+    </nav>
+    <div class="win">
+      <span class="fvpath" id="fvPath"></span>
+      <button class="pill fivemloc" id="btnFivemTop" title="Pilih folder FiveM Application Data">Lokasi FiveM</button>
+      <div class="pill players" id="players" title="Pemain online"><i class="dot"></i><span id="playersText">...</span><span class="sep"></span><span class="peak" id="peakText" title="Peak pemain 24 jam">Peak -</span><span class="sep"></span><span class="rank" id="rankText" title="Peringkat server global (5metrics)">Rank -</span></div>
+      <div class="lights"><button class="light min" id="btnMin" title="Minimize"><i>&#8722;</i></button><button class="light close" id="btnClose" title="Tutup"><i>&#10005;</i></button></div>
+    </div>
+  </header>
+
+  <div class="hero">
+    <img src="banner.gif" alt="">
+    <div class="hero-text">
+      <img class="hero-logo" src="logo.webp" alt="IME Roleplay">
+      <div><h1>IME Roleplay</h1></div>
+    </div>
+  </div>
+
+  <main>
+    <!-- GATE -->
+    <section class="view active" id="view-gate">
+      <div class="toolbar"><button class="btn small" id="btnTest" disabled>Mengukur...</button></div>
+      <div class="gates" id="gates"></div>
+      <div class="bottom">
+        <div class="card chart">
+          <div class="chart-top">
+            <b>Pemain 24 jam</b>
+            <span class="cs" id="chStats"></span>
+          </div>
+          <div class="chart-box" id="chBox"><svg id="chSvg" viewBox="0 0 600 100" preserveAspectRatio="none"></svg><div class="tip" id="chTip"></div></div>
+          <div class="axis" id="chAxis"></div>
+        </div>
+        <div class="side">
+          <div class="dcs" id="dcs"></div>
+          <span class="status" id="connectStatus"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CACHE -->
+    <section class="view" id="view-cache">
+      <div class="card cachecard">
+        <div class="card-head"><h2>Download Cache</h2><span class="pill" id="cacheVer">versi -</span></div>
+        <div class="rows">
+          <div class="row"><label>Ukuran</label><span id="cSize">-</span></div>
+          <div class="row"><label>Update terakhir</label><span id="cUpdated">-</span></div>
+          <div class="row"><label>Simpan di</label><span class="path" id="cDir">-</span><button class="btn small ghost" id="btnDir">Ubah</button></div>
+          <div class="row"><label>FiveM Application Data</label><span class="path" id="cFivem">-</span><button class="btn small ghost" id="btnFivem">Cari</button></div>
+          <div class="row"><label>Tujuan extract</label><span class="path" id="cTarget">-</span></div>
+        </div>
+        <div class="bar"><div class="fill" id="dlFill"></div></div>
+        <div class="stats">
+          <div><label>Progress</label><b id="dlPct">0%</b></div>
+          <div><label>Terunduh</label><b id="dlDone">0 B</b></div>
+          <div><label>Kecepatan</label><b id="dlSpeed">-</b></div>
+          <div><label>Estimasi</label><b id="dlEta">-</b></div>
+        </div>
+        <div class="msg" id="dlMsg"></div>
+        <div class="actions">
+          <button class="btn primary" id="btnDl">Mulai Download</button>
+          <button class="btn ghost" id="btnPause" disabled>Jeda</button>
+          <button class="btn accent" id="btnExtract" disabled>Extract ke FiveM</button>
+          <button class="btn ghost" id="btnOpenDir">Buka Folder</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="ov" id="ov" hidden>
+    <div class="ov-card">
+      <div class="ov-icon" id="ovIcon"></div>
+      <div class="ov-state" id="ovState"></div>
+      <h2 id="ovTitle"></h2>
+      <p id="ovMsg"></p>
+      <div class="ov-ver" id="ovVer"></div>
+      <div class="ov-actions">
+        <button class="btn primary" id="ovDl" hidden>Download Update</button>
+        <button class="btn" id="ovRetry" hidden>Cek Lagi</button>
+        <button class="btn ghost" id="ovLater" hidden>Nanti</button>
+        <button class="btn ghost" id="ovQuit" hidden>Keluar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -125,18 +125,24 @@ func setNicknameInFile(path, name string) (bool, error) {
 		return false, nil
 	}
 
+	return true, commitCfg(path, orig, exists, next)
+}
+
+// commitCfg replaces the cfg at path with next: a one-time .imebak copy of the
+// original is kept and the new text is moved into place atomically.
+func commitCfg(path string, orig []byte, exists bool, next string) error {
 	if exists {
 		if _, err := os.Stat(path + ".imebak"); os.IsNotExist(err) {
 			_ = os.WriteFile(path+".imebak", orig, 0o644)
 		}
 	} else if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return false, err
+		return err
 	}
 	tmp := path + ".tmp"
 	if err := os.WriteFile(tmp, []byte(next), 0o644); err != nil {
-		return false, err
+		return err
 	}
-	return true, os.Rename(tmp, path)
+	return os.Rename(tmp, path)
 }
 
 // GetNickname reads the current cl_nickname from fivem.cfg.
